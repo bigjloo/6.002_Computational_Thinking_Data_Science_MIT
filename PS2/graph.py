@@ -1,8 +1,8 @@
 # 6.0002 Problem Set 5
 # Graph optimization
-# Name:
+# Name: Junzhong Loo
 # Collaborators:
-# Time:
+# Date: 13/6/2021
 
 import unittest
 
@@ -93,8 +93,10 @@ class Digraph(object):
     def add_node(self, node):
         """Adds a Node object to the Digraph. Raises a ValueError if it is
         already in the graph."""
+        """ REMOVED
         if self.has_node(node):
             raise ValueError
+        """
         self.nodes.add(node)
 
     def add_edge(self, edge):
