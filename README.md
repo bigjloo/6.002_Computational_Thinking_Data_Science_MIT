@@ -8,3 +8,6 @@ MIT Open Courseware - 6.002 Computational Thinking for Data Science
 - Dynamic programming 
   - fibonacci
   - memoization 
+- Graphs  
+  - Digraphs
+  - Depth First Search (DFS)
