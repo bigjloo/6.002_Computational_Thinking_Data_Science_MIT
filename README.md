@@ -3,7 +3,7 @@ MIT Open Courseware - 6.002 Computational Thinking for Data Science
 
 ## PS1
 ### Learning Objectives:
-- Greedy Algoritm
+- Greedy Algorithm
 - Brute Force
 - Dynamic programming 
   - fibonacci
