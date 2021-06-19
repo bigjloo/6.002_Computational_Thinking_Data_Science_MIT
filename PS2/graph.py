@@ -107,7 +107,7 @@ class Digraph(object):
         # Check if src and dest nodes exist in graph
         if not (self.has_node(src) and self.has_node(dest)):
             raise ValueError
-            # if node -> list(edges) exist, append to list. else create new Node -> list(edges) key value pair
+         # if node -> list(edges) exist, append to list. else create new Node -> list(edges) key value pair
         if src in self.edges:
             self.edges[src].append(edge)
         else:

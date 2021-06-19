@@ -94,6 +94,17 @@ def load_map(map_filename):
 # Constraints: distance outdoors
 
 # Problem 3b: Implement get_best_path
+def getDistance(digraph, path):
+    total_dist = 0
+    outdoor_dist = 0
+    for i in range(len(path) - 1):
+        for edge in digraph.edges[path[i]]:
+            if edge.dest == path[i + 1]:
+                total_dist += edge.get_total_distance()
+                outdoor_dist += edge.get_outdoor_distance()
+    return (total_dist, outdoor_dist)
+
+
 def get_best_path(digraph, start, end, path, max_dist_outdoors, best_dist,
                   best_path)-> tuple:
     """
@@ -128,35 +139,26 @@ def get_best_path(digraph, start, end, path, max_dist_outdoors, best_dist,
         If there exists no path that satisfies max_total_dist and
         max_dist_outdoors constraints, then return None.
     """
-    # if start and end are not valid nodes:
-    #   raise error
-    if not (digraph.has_node(start) or digraph.has_node(end)):
-        """node not in digraph"""
-        raise KeyError
 
-    # if destination is found
+    # SOLUTION copied from tuthang102 on github
+    path = path + [start]
+    if not digraph.has_node(start):
+        raise KeyError
+    
     elif start == end:
-        total_dist = 0
-        outdoors_dist = 0
-        for p in path:
-            total_dist += p[1] 
-            outdoors_dist += p[2]
-        # Constraint is met
-        if outdoors_dist <= max_dist_outdoors and total_dist <= best_dist:
-            best_dist = total_dist
-            max_dist_outdoors = outdoors_dist
-            best_path = path
-    # else:
-    #   for all child nodes of start:
-    #       construct a path including that node
-    #       recursively solve the rest of the path, from the child node to the end node
+        return path
     else:
         for wEdge in digraph.edges[start]:
-            path.append([[start, wEdge.dest], wEdge.total_distance, wEdge.outdoor_distance])
-            get_best_path(digraph, wEdge.dest, end, path, max_dist_outdoors, best_dist, best_path)
+            if wEdge.dest not in path:
+                    new_path = get_best_path(digraph, wEdge.dest, end, path, max_dist_outdoors, best_dist, best_path)
+                    if new_path != None:
+                        total_dist, outdoor_dist = getDistance(digraph, new_path)
+                        if outdoor_dist <= max_dist_outdoors and total_dist <= best_dist:
+                            best_path = new_path
+                            best_dist = total_dist
     
-    # return shortest path
     return best_path
+
 
 
 # Problem 3c: Implement directed_dfs
@@ -190,54 +192,12 @@ def directed_dfs(digraph, start, end, max_total_dist, max_dist_outdoors):
     """
     start = Node(start)
     end = Node(end)
-    explored = []
-    path = []
-    if not (digraph.has_node(start) or digraph.has_node(end)):
-        """node not in digraph"""
-        raise KeyError
+    best_path = get_best_path(digraph, start, end, [], max_dist_outdoors, max_total_dist, None)
 
-    # if destination is found
-    elif start == end:
-        total_dist = 0
-        outdoors_dist = 0
-        for p in path:
-            total_dist += p[1] 
-            outdoors_dist += p[2]
-        # Constraint is met
-        if outdoors_dist <= max_dist_outdoors and total_dist <= best_dist:
-            best_dist = total_dist
-            max_dist_outdoors = outdoors_dist
-            best_path = path
-    # else:
-    #   for all child nodes of start:
-    #       construct a path including that node
-    #       recursively solve the rest of the path, from the child node to the end node
-    else:
-        for wEdge in digraph.edges[start]:
-            # if node not in expored, cont. -> avoid cycles
-            if not wEdge.dest in explored:
-                explored.append(wEdge.dest)
-                path.append([[start, wEdge.dest], wEdge.total_distance, wEdge.outdoor_distance])
-                get_best_path(digraph, wEdge.dest, end, path, max_dist_outdoors, best_dist, best_path, explored)
-    
-    # return shortest path
-    return best_path
+    if best_path == None:
+        raise ValueError
+    return [node.get_name() for node in best_path]
 
-    
-    
-    """
-        get_best_path(digraph, start, end, path, max_dist_outdoors, best_dist, best_path, explored)-> tuple:
-    """
-    # best_path = get_best_path(digraph, start, end, list() , max_dist_outdoors, max_total_dist, None, [start])
-    # if best_path == None:
-    #     return None
-    # shortest_path = []
-    # for path in best_path:
-    #     max_total_dist -= path[1]
-    #     if max_total_dist < 0:
-    #         raise ValueError
-    #     shortest_path.append(path[0][0])
-    
     
 
 # ================================================================
@@ -330,4 +290,6 @@ class Ps2Test(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
     # graph = load_map("mit_map.txt")
-    # print(graph)
+    # # # # print(graph)
+    # for wEdge in graph.edges[Node('16')]:
+    #     print(wEdge)
