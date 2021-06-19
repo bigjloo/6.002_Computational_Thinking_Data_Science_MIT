@@ -9,6 +9,7 @@
 # Finding shortest paths through MIT buildings
 #
 import unittest
+import math
 from graph import Digraph, Node, WeightedEdge
 
 #
@@ -63,21 +64,19 @@ def load_map(map_filename):
         source = Node(splitElements[0])
         destination = Node(splitElements[1]) 
 
-        graph.add_node(source)
-        graph.add_node(destination)
+        if not source in graph.edges:
+            graph.add_node(source)
+        if not destination in graph.edges:
+            graph.add_node(destination)
     
         # create WeightedEdges instances from line 
         wEdge = WeightedEdge(source, destination, int(splitElements[2]), int(splitElements[3]))
 
         # add edges to digraph from WeightedEdges instance 
         graph.add_edge(wEdge)
-        
-    return graph
-    
-
-
 
     return graph
+
 
 # Problem 2c: Testing load_map
 # Include the lines used to test load_map below, but comment them out
@@ -91,11 +90,12 @@ def load_map(map_filename):
 # What is the objective function for this problem? What are the constraints?
 #
 # Answer:
-#
+# We are trying to find the shortest path (least distance taken to travel from source to destination)
+# Constraints: distance outdoors
 
 # Problem 3b: Implement get_best_path
 def get_best_path(digraph, start, end, path, max_dist_outdoors, best_dist,
-                  best_path):
+                  best_path)-> tuple:
     """
     Finds the shortest path between buildings subject to constraints.
 
@@ -128,8 +128,35 @@ def get_best_path(digraph, start, end, path, max_dist_outdoors, best_dist,
         If there exists no path that satisfies max_total_dist and
         max_dist_outdoors constraints, then return None.
     """
-    # TODO
-    pass
+    # if start and end are not valid nodes:
+    #   raise error
+    if not (digraph.has_node(start) or digraph.has_node(end)):
+        """node not in digraph"""
+        raise KeyError
+
+    # if destination is found
+    elif start == end:
+        total_dist = 0
+        outdoors_dist = 0
+        for p in path:
+            total_dist += p[1] 
+            outdoors_dist += p[2]
+        # Constraint is met
+        if outdoors_dist <= max_dist_outdoors and total_dist <= best_dist:
+            best_dist = total_dist
+            max_dist_outdoors = outdoors_dist
+            best_path = path
+    # else:
+    #   for all child nodes of start:
+    #       construct a path including that node
+    #       recursively solve the rest of the path, from the child node to the end node
+    else:
+        for wEdge in digraph.edges[start]:
+            path.append([[start, wEdge.dest], wEdge.total_distance, wEdge.outdoor_distance])
+            get_best_path(digraph, wEdge.dest, end, path, max_dist_outdoors, best_dist, best_path)
+    
+    # return shortest path
+    return best_path
 
 
 # Problem 3c: Implement directed_dfs
@@ -161,9 +188,57 @@ def directed_dfs(digraph, start, end, max_total_dist, max_dist_outdoors):
         If there exists no path that satisfies max_total_dist and
         max_dist_outdoors constraints, then raises a ValueError.
     """
-    # TODO
-    pass
+    start = Node(start)
+    end = Node(end)
+    explored = []
+    path = []
+    if not (digraph.has_node(start) or digraph.has_node(end)):
+        """node not in digraph"""
+        raise KeyError
 
+    # if destination is found
+    elif start == end:
+        total_dist = 0
+        outdoors_dist = 0
+        for p in path:
+            total_dist += p[1] 
+            outdoors_dist += p[2]
+        # Constraint is met
+        if outdoors_dist <= max_dist_outdoors and total_dist <= best_dist:
+            best_dist = total_dist
+            max_dist_outdoors = outdoors_dist
+            best_path = path
+    # else:
+    #   for all child nodes of start:
+    #       construct a path including that node
+    #       recursively solve the rest of the path, from the child node to the end node
+    else:
+        for wEdge in digraph.edges[start]:
+            # if node not in expored, cont. -> avoid cycles
+            if not wEdge.dest in explored:
+                explored.append(wEdge.dest)
+                path.append([[start, wEdge.dest], wEdge.total_distance, wEdge.outdoor_distance])
+                get_best_path(digraph, wEdge.dest, end, path, max_dist_outdoors, best_dist, best_path, explored)
+    
+    # return shortest path
+    return best_path
+
+    
+    
+    """
+        get_best_path(digraph, start, end, path, max_dist_outdoors, best_dist, best_path, explored)-> tuple:
+    """
+    # best_path = get_best_path(digraph, start, end, list() , max_dist_outdoors, max_total_dist, None, [start])
+    # if best_path == None:
+    #     return None
+    # shortest_path = []
+    # for path in best_path:
+    #     max_total_dist -= path[1]
+    #     if max_total_dist < 0:
+    #         raise ValueError
+    #     shortest_path.append(path[0][0])
+    
+    
 
 # ================================================================
 # Begin tests -- you do not need to modify anything below this line
@@ -202,7 +277,7 @@ class Ps2Test(unittest.TestCase):
         print("Shortest path from Building {} to {} {}".format(
             start, end, constraint))
 
-    """
+    
     def _test_path(self,
                    expectedPath,
                    total_dist=LARGE_DIST,
@@ -213,7 +288,7 @@ class Ps2Test(unittest.TestCase):
         print("Expected: ", expectedPath)
         print("DFS: ", dfsPath)
         self.assertEqual(expectedPath, dfsPath)
-
+    
     def _test_impossible_path(self,
                               start,
                               end,
@@ -225,7 +300,7 @@ class Ps2Test(unittest.TestCase):
 
     def test_path_one_step(self):
         self._test_path(expectedPath=['32', '56'])
-
+"""
     def test_path_no_outdoors(self):
         self._test_path(
             expectedPath=['32', '36', '26', '16', '56'], outdoor_dist=0)
@@ -250,7 +325,9 @@ class Ps2Test(unittest.TestCase):
 
     def test_impossible_path2(self):
         self._test_impossible_path('10', '32', total_dist=100)
-    """
+"""
 
 if __name__ == "__main__":
     unittest.main()
+    # graph = load_map("mit_map.txt")
+    # print(graph)

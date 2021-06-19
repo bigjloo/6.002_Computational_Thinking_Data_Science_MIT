@@ -93,26 +93,27 @@ class Digraph(object):
     def add_node(self, node):
         """Adds a Node object to the Digraph. Raises a ValueError if it is
         already in the graph."""
-        """ REMOVED
-        if self.has_node(node):
+        if node in self.edges:
             raise ValueError
-        """
         self.nodes.add(node)
+
 
     def add_edge(self, edge):
         """Adds an Edge or WeightedEdge instance to the Digraph. Raises a
         ValueError if either of the nodes associated with the edge is not
         in the  graph."""
-
+        src = edge.src
+        dest = edge.dest
         # Check if src and dest nodes exist in graph
-        if self.has_node(edge.dest) and self.has_node(edge.src):
-            # if node -> list(edges) exist, append to list. else create new Node -> list(edges) key value pair
-            if edge.src in self.edges:
-                self.edges[edge.src].append(edge)
-            else:
-                self.edges[edge.src] = [edge]
-        else:
+        if not (self.has_node(src) and self.has_node(dest)):
             raise ValueError
+            # if node -> list(edges) exist, append to list. else create new Node -> list(edges) key value pair
+        if src in self.edges:
+            self.edges[src].append(edge)
+        else:
+            self.edges[src] = [edge]
+
+            
 
 
 # ================================================================
