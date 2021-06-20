@@ -260,7 +260,7 @@ class Ps2Test(unittest.TestCase):
 
     def test_path_one_step(self):
         self._test_path(expectedPath=['32', '56'])
-"""
+
     def test_path_no_outdoors(self):
         self._test_path(
             expectedPath=['32', '36', '26', '16', '56'], outdoor_dist=0)
@@ -285,7 +285,7 @@ class Ps2Test(unittest.TestCase):
 
     def test_impossible_path2(self):
         self._test_impossible_path('10', '32', total_dist=100)
-"""
+
 
 if __name__ == "__main__":
     unittest.main()
