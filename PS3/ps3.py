@@ -80,16 +80,16 @@ class RectangularRoom(object):
         height: an integer > 0
         dirt_amount: an integer >= 0
         """
-        tiles = []
+        
         # Represent tiles as a matrix list H x W of dirt_amount:
         #   [[dirt, dirt, dirt],
         #    [dirt, dirt, dirt],
         #    [dirt, dirt, dirt]]
+        tiles = []
         for i in range(height):
             # Create a row for every 1 height
             tiles.append([])
             for j in range(width):
-                # Create a row for every 1 width
                 tiles[i].append(dirt_amount)
 
         self.width = width
@@ -111,13 +111,12 @@ class RectangularRoom(object):
               If the capacity exceeds the amount of dirt on the tile, mark it as 0.
         """
         # Tile position
-        tile_posX, tile_poxY = math.floor(pos.get_x()), math.floor(pos.get_y())
-        tile = self.tiles[tile_posX][tile_poxY]
+        tile_posX, tile_posY = math.floor(pos.get_x()), math.floor(pos.get_y())
 
         # Reduce dirt amount on tile by capacity. If dirt amount <= 0. Tile = 0
-        if tile <= capacity:
-            tile = 0
-        tile -= capacity
+        self.tiles[tile_posY][tile_posX] -= capacity
+        if self.tiles[tile_posY][tile_posX] < 0:
+            self.tiles[tile_posY][tile_posX] = 0
 
 
     def is_tile_cleaned(self, m, n):
@@ -134,7 +133,7 @@ class RectangularRoom(object):
         Note: The tile is considered clean only when the amount of dirt on this
               tile is 0.
         """
-        if self.tiles[m][n] == 0:
+        if self.tiles[n][m] == 0:
             return True
         return False
 
@@ -143,8 +142,8 @@ class RectangularRoom(object):
         Returns: an integer; the total number of clean tiles in the room
         """
         cleaned_tiles = 0
-        for i in self.tiles:
-            cleaned_tiles += self.tiles[i].count(0)
+        for row in self.tiles:
+            cleaned_tiles += row.count(0)
         
         return cleaned_tiles
 
@@ -158,8 +157,8 @@ class RectangularRoom(object):
         tiles_posX = math.floor(pos.get_x())
         tiles_posY = math.floor(pos.get_y())
         try:
-            tile = self.tiles[tiles_posX][tiles_posY]    
-        except:
+            tile = self.tiles[tiles_posY][tiles_posX]    
+        except IndexError:
             return False
         return True
 
@@ -174,9 +173,9 @@ class RectangularRoom(object):
 
         Returns: an integer
         """
-        tiles_posX = math.floor(pos.get_x())
-        tiles_posY = math.floor(pos.get_y())
-        return self.tiles[tiles_posX][tiles_posY]
+        # tiles_posX = math.floor(pos.get_x())
+        # tiles_posY = math.floor(pos.get_y())
+        return self.tiles[n][m]
         
     def get_num_tiles(self):
         """
@@ -227,7 +226,7 @@ class Robot(object):
         self.room = room
         self.speed = speed
         self.capacity = capacity
-        self.direction = math.random(0, 360)
+        self.direction = random.randrange(0, 360)
         self.position = self.room.get_random_position()
 
     def get_robot_position(self):
@@ -280,7 +279,7 @@ class EmptyRoom(RectangularRoom):
         """
         Returns: an integer; the total number of tiles in the room
         """
-        raise NotImplementedError
+        return self.width * self.height
         
     def is_position_valid(self, pos):
         """
@@ -288,13 +287,13 @@ class EmptyRoom(RectangularRoom):
         
         Returns: True if pos is in the room, False otherwise.
         """
-        raise NotImplementedError
+        return self.is_position_in_room(pos)
         
     def get_random_position(self):
         """
         Returns: a Position object; a valid random position (inside the room).
         """
-        raise NotImplementedError
+        return Position(random.randint(0, self.width - 1), random.randint(0, self.height - 1))
 
 class FurnishedRoom(RectangularRoom):
     """
@@ -333,6 +332,7 @@ class FurnishedRoom(RectangularRoom):
         f_bottom_left_y = random.randint(0, self.height - furniture_height)
 
         # Fill list with tuples of furniture tiles.
+        # (x, y) coordinates
         for i in range(f_bottom_left_x, f_bottom_left_x + furniture_width):
             for j in range(f_bottom_left_y, f_bottom_left_y + furniture_height):
                 self.furniture_tiles.append((i,j))             
@@ -341,7 +341,7 @@ class FurnishedRoom(RectangularRoom):
         """
         Return True if tile (m, n) is furnished.
         """
-        raise NotImplementedError
+        return (m, n) in self.furniture_tiles
         
     def is_position_furnished(self, pos):
         """
@@ -349,7 +349,9 @@ class FurnishedRoom(RectangularRoom):
 
         Returns True if pos is furnished and False otherwise
         """
-        raise NotImplementedError
+        x = math.floor(pos.get_x())
+        y = math.floor(pos.get_y())
+        return (x, y) in self.furniture_tiles
         
     def is_position_valid(self, pos):
         """
@@ -357,19 +359,31 @@ class FurnishedRoom(RectangularRoom):
         
         returns: True if pos is in the room and is unfurnished, False otherwise.
         """
-        raise NotImplementedError
+        return self.is_position_in_room(pos) and not self.is_position_furnished
         
     def get_num_tiles(self):
         """
         Returns: an integer; the total number of tiles in the room that can be accessed.
         """
-        raise NotImplementedError
+        return self.width * self.height - len(self.furniture_tiles)
         
     def get_random_position(self):
         """
         Returns: a Position object; a valid random position (inside the room and not in a furnished area).
         """
-        raise NotImplementedError
+        # find furnished tiles range x and y
+        furnished_dimensions_x = max(self.furniture_tiles)[0] - min(self.furniture_tiles)[0]
+        furnished_dimensions_y = max(self.furniture_tiles)[1] - min(self.furniture_tiles)[1]
+        starting_x = min(self.furniture_tiles)[0]
+        starting_y = min(self.furniture_tiles)[1]
+
+        # find remaining unfurnished pos 
+        x_choice = random.choice([(0, starting_x), (starting_x + furnished_dimensions_x, self.width - 1)])
+        y_choice = random.choice([(0, starting_y), (starting_y + furnished_dimensions_y, self.height - 1)])
+        x = random.randint(*y_choice)
+        y = random.randint(*x_choice)
+        furnished = self.furniture_tiles
+        return Position(random.randint(*y_choice), random.randint(*x_choice))
 
 # === Problem 3
 class StandardRobot(Robot):
